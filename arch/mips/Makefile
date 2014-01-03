@@ -192,6 +192,14 @@ endif
 #
 include $(srctree)/arch/mips/Kbuild.platforms
 
+#
+# Goldfish
+#
+core-$(CONFIG_MIPS_GOLDFISH)	+= arch/mips/goldfish/
+cflags-$(CONFIG_MIPS_GOLDFISH)	+= -Iarch/mips/include/asm/mach-goldfish -Iarch/mips/goldfish/include
+load-$(CONFIG_MIPS_GOLDFISH)	+= 0xffffffff80010000
+all-$(CONFIG_MIPS_GOLDFISH)	:= vmlinux.bin
+
 cflags-y			+= -I$(srctree)/arch/mips/include/asm/mach-generic
 drivers-$(CONFIG_PCI)		+= arch/mips/pci/
 
