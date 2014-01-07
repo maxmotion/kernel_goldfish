@@ -57,7 +57,7 @@ static ssize_t btmrvl_hscfgcmd_write(struct file *file,
 	if (copy_from_user(&buf, ubuf, min_t(size_t, sizeof(buf) - 1, count)))
 		return -EFAULT;
 
-	ret = strict_strtol(buf, 10, &result);
+	ret = kstrtol(buf, 10, &result);
 	if (ret)
 		return ret;
 
@@ -144,7 +144,7 @@ static ssize_t btmrvl_pscmd_write(struct file *file, const char __user *ubuf,
 	if (copy_from_user(&buf, ubuf, min_t(size_t, sizeof(buf) - 1, count)))
 		return -EFAULT;
 
-	ret = strict_strtol(buf, 10, &result);
+	ret = kstrtol(buf, 10, &result);
 	if (ret)
 		return ret;
 
@@ -231,7 +231,7 @@ static ssize_t btmrvl_hscmd_write(struct file *file, const char __user *ubuf,
 	if (copy_from_user(&buf, ubuf, min_t(size_t, sizeof(buf) - 1, count)))
 		return -EFAULT;
 
-	ret = strict_strtol(buf, 10, &result);
+	ret = kstrtol(buf, 10, &result);
 	if (ret)
 		return ret;
 
@@ -394,30 +394,28 @@ void btmrvl_debugfs_init(struct hci_dev *hdev)
 
 	dbg->config_dir = debugfs_create_dir("config", hdev->debugfs);
 
-	dbg->psmode = debugfs_create_file("psmode", 0644, dbg->config_dir,
-					  priv, &btmrvl_psmode_fops);
-	dbg->pscmd = debugfs_create_file("pscmd", 0644, dbg->config_dir,
-					 priv, &btmrvl_pscmd_fops);
-	dbg->gpiogap = debugfs_create_file("gpiogap", 0644, dbg->config_dir,
-					   priv, &btmrvl_gpiogap_fops);
-	dbg->hsmode =  debugfs_create_file("hsmode", 0644, dbg->config_dir,
-					   priv, &btmrvl_hsmode_fops);
-	dbg->hscmd = debugfs_create_file("hscmd", 0644, dbg->config_dir,
-					 priv, &btmrvl_hscmd_fops);
-	dbg->hscfgcmd = debugfs_create_file("hscfgcmd", 0644, dbg->config_dir,
-					    priv, &btmrvl_hscfgcmd_fops);
+	debugfs_create_u8("psmode", 0644, dbg->config_dir,
+			  &priv->btmrvl_dev.psmode);
+	debugfs_create_file("pscmd", 0644, dbg->config_dir,
+			    priv, &btmrvl_pscmd_fops);
+	debugfs_create_x16("gpiogap", 0644, dbg->config_dir,
+			   &priv->btmrvl_dev.gpio_gap);
+	debugfs_create_u8("hsmode", 0644, dbg->config_dir,
+			  &priv->btmrvl_dev.hsmode);
+	debugfs_create_file("hscmd", 0644, dbg->config_dir,
+			    priv, &btmrvl_hscmd_fops);
+	debugfs_create_file("hscfgcmd", 0644, dbg->config_dir,
+			    priv, &btmrvl_hscfgcmd_fops);
 
 	dbg->status_dir = debugfs_create_dir("status", hdev->debugfs);
-	dbg->curpsmode = debugfs_create_file("curpsmode", 0444,
-					     dbg->status_dir, priv,
-					     &btmrvl_curpsmode_fops);
-	dbg->psstate = debugfs_create_file("psstate", 0444, dbg->status_dir,
-					   priv, &btmrvl_psstate_fops);
-	dbg->hsstate = debugfs_create_file("hsstate", 0444, dbg->status_dir,
-					   priv, &btmrvl_hsstate_fops);
-	dbg->txdnldready = debugfs_create_file("txdnldready", 0444,
-					       dbg->status_dir, priv,
-					       &btmrvl_txdnldready_fops);
+	debugfs_create_u8("curpsmode", 0444, dbg->status_dir,
+			  &priv->adapter->psmode);
+	debugfs_create_u8("psstate", 0444, dbg->status_dir,
+			  &priv->adapter->ps_state);
+	debugfs_create_u8("hsstate", 0444, dbg->status_dir,
+			  &priv->adapter->hs_state);
+	debugfs_create_u8("txdnldready", 0444, dbg->status_dir,
+			  &priv->btmrvl_dev.tx_dnld_rdy);
 }
 
 void btmrvl_debugfs_remove(struct hci_dev *hdev)
@@ -428,19 +426,8 @@ void btmrvl_debugfs_remove(struct hci_dev *hdev)
 	if (!dbg)
 		return;
 
-	debugfs_remove(dbg->psmode);
-	debugfs_remove(dbg->pscmd);
-	debugfs_remove(dbg->gpiogap);
-	debugfs_remove(dbg->hsmode);
-	debugfs_remove(dbg->hscmd);
-	debugfs_remove(dbg->hscfgcmd);
-	debugfs_remove(dbg->config_dir);
-
-	debugfs_remove(dbg->curpsmode);
-	debugfs_remove(dbg->psstate);
-	debugfs_remove(dbg->hsstate);
-	debugfs_remove(dbg->txdnldready);
-	debugfs_remove(dbg->status_dir);
+	debugfs_remove_recursive(dbg->config_dir);
+	debugfs_remove_recursive(dbg->status_dir);
 
 	kfree(dbg);
 }
