@@ -2789,6 +2789,7 @@ CONFIG_IOMMU_SUPPORT=y
 #
 # CONFIG_VIRT_DRIVERS is not set
 # CONFIG_PM_DEVFREQ is not set
+CONFIG_VBOX_GUEST=m
 
 #
 # Firmware Drivers
